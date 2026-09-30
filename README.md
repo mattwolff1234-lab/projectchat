@@ -10,6 +10,8 @@ cp .env.example .env.local   # add ANTHROPIC_API_KEY at minimum
 npm run dev                  # open http://localhost:3000/simulator
 ```
 
+To test Jev by itself (no Anthropic key needed), put `TYPESAFE_API_KEY` in `.env.local` and run `npm run jev:test`. It scores 10 follower messages and 6 drafts and shows where the policy disagrees with what we expect.
+
 The simulator needs only `ANTHROPIC_API_KEY`. Add `TYPESAFE_API_KEY` to use Jev. Without it, the LLM fallback runs and replies show as held.
 
 ## Deploy (Vercel)
