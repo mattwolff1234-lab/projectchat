@@ -84,6 +84,18 @@ describe("runTurn", () => {
     expect(r.bubbles).toEqual([]);
   });
 
+  it("sends exactly one bubble as a comment opener", async () => {
+    jev.inbound.mockResolvedValue(inbound({ intent: "wants_link" }));
+    writer.write.mockResolvedValue({ bubbles: ["saw ur comment!! want the walkthrough?", "[[LINK]]"], end_conversation: false });
+    jev.outbound.mockResolvedValue(clean());
+    const r = await runTurn({
+      message: "STORE", thread: [], campaigns: [SHOPIFY_BRIEF], voice: SAMPLE_VOICE, approvalMode: false,
+      source: "comment", makeLink: async () => "https://x.test/l/abc",
+    });
+    expect(r.bubbles).toEqual(["saw ur comment!! want the walkthrough?"]);
+    expect(writer.write.mock.calls[0][0].commentOpener).toBe(true);
+  });
+
   it("never writes when the inbound check says stay out", async () => {
     jev.inbound.mockResolvedValue(inbound({ campaignRelated: 0.05 }));
     const r = await turn("hey how was your weekend");

@@ -22,9 +22,13 @@ export async function writeReply(input: {
   judgment?: InboundJudgment;
   linksAlreadySent: number;
   revisionNote?: string; // set when the outbound check blocked the previous draft
+  commentOpener?: boolean; // first DM, sent as a private reply to a comment
 }) {
   const { brief, voice } = input;
   const hint = input.judgment ? INTENT_HINTS[input.judgment.intent] : undefined;
+  const opener = input.commentOpener
+    ? `\nThis is your FIRST DM to them, sent because they commented "${input.message}" on your post. Instagram lets you send exactly ONE message until they reply, so write exactly ONE bubble that makes them want to answer: a quick question or an offer ("want the walkthrough?"), not just a link. Reference their comment naturally.`
+    : "";
 
   const system = `You are replying to Instagram DMs as the creator @${voice.handle}. You are a real person texting a follower, not a brand account or support bot.
 
@@ -60,7 +64,7 @@ HOW TO REPLY
   const user = `Conversation so far:
 ${input.thread.map((t) => `${t.from === "follower" ? "them" : "you"}: ${t.text}`).join("\n") || "(this is the first message)"}
 
-Their new message: ${input.message}
+Their new message: ${input.message}${opener}
 ${hint ? `\nNote: ${hint}` : ""}${input.revisionNote ? `\nYour previous draft was blocked: ${input.revisionNote}. Write a new reply that fixes this.` : ""}`;
 
   return structured<{ bubbles: string[]; end_conversation: boolean }>({

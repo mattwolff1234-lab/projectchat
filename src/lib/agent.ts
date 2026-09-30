@@ -16,6 +16,7 @@ export async function runTurn(input: {
   campaigns: CampaignBrief[];
   voice: VoiceProfile;
   approvalMode: boolean;
+  source?: "dm" | "comment"; // "comment" + empty thread = private reply opener (one message allowed)
   makeLink: (campaign: CampaignBrief) => Promise<string>;
 }): Promise<TurnResult> {
   const trace: TraceStep[] = [];
@@ -42,9 +43,12 @@ export async function runTurn(input: {
   const linksAlreadySent = input.thread.filter((t) => t.from !== "follower" && /https?:\/\//.test(t.text)).length;
 
   // 2. Write, check, and rewrite once if the check blocks the draft.
+  const commentOpener = input.source === "comment" && input.thread.length === 0;
   let revisionNote: string | undefined;
   for (let attempt = 1; attempt <= 2; attempt++) {
-    const draft = await writeReply({ brief, voice: input.voice, thread: input.thread, message: input.message, judgment: inbound, linksAlreadySent, revisionNote });
+    const draft = await writeReply({ brief, voice: input.voice, thread: input.thread, message: input.message, judgment: inbound, linksAlreadySent, revisionNote, commentOpener });
+    // Instagram allows one private reply per comment: keep only the first bubble.
+    if (commentOpener) draft.bubbles = draft.bubbles.slice(0, 1);
     trace.push({ step: `draft ${attempt}`, engine: "llm", detail: draft });
     if (draft.bubbles.length === 0) {
       return { action: "silent", reason: "agent chose not to reply", bubbles: [], campaignId: brief.id, trace };

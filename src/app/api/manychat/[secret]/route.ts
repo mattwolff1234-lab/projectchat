@@ -43,6 +43,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/manychat/[secre
     campaigns,
     voice: creator.voice,
     approvalMode: creator.approval_mode,
+    source: body.source === "comment" ? "comment" : "dm",
     makeLink: async (c) => {
       const slug = await createLink({ creator_id: creator.id, campaign_id: c.id, conversation_id: convo.id, destination: c.link });
       return `${process.env.APP_URL}/l/${slug}`;
